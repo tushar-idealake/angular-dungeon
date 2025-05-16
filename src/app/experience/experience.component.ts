@@ -13,6 +13,11 @@ import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial } from 'three';
       <ngt-mesh-basic-material [color]="'orange'" />
     </ngt-mesh>
 
+    <ngt-mesh [position]="[1, 0.5, 0]">
+      <ngt-box-geometry />
+      <ngt-mesh-basic-material [color]="'hotpink'" />
+    </ngt-mesh>
+
     <ngt-grid-helper />
 
     <ngts-orbit-controls />
