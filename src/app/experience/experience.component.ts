@@ -1,53 +1,16 @@
-import { DOCUMENT } from '@angular/common';
-import {
-  CUSTOM_ELEMENTS_SCHEMA,
-  ChangeDetectionStrategy,
-  Component,
-  Directive,
-  ElementRef,
-  inject,
-  signal,
-  viewChild,
-} from '@angular/core';
-import { extend, getLocalState, injectBeforeRender, injectObjectEvents } from 'angular-three';
+import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component } from '@angular/core';
+import { extend, injectBeforeRender } from 'angular-three';
 import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
 import { NgtsOrbitControls } from 'angular-three-soba/controls';
 import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial } from 'three';
-
-@Directive({
-  selector: '[cursorPointer]',
-  standalone: true,
-})
-export class CursorPointer {
-  constructor() {
-    const document = inject(DOCUMENT);
-    const hostElement = inject<ElementRef<Mesh>>(ElementRef);
-    const mesh = hostElement.nativeElement;
-
-    const localState = getLocalState(mesh);
-    if (!localState) return;
-
-    injectObjectEvents(() => mesh, {
-      pointerover: () => void (document.body.style.cursor = 'pointer'),
-      pointerout: () => void (document.body.style.cursor = 'default'),
-    });
-  }
-}
 
 @Component({
   template: `
     <ngts-perspective-camera [options]="{ makeDefault: true, position: [-3, 5, 5] }" />
 
-    <ngt-mesh
-      #mesh
-      cursorPointer
-      (click)="clicked.set(!clicked())"
-      (pointerover)="hovered.set(true)"
-      (pointerout)="hovered.set(false)"
-      [scale]="clicked() ? 1.5 : 1"
-    >
+    <ngt-mesh [position]="[0, 0.5, 0]">
       <ngt-box-geometry />
-      <ngt-mesh-basic-material [color]="hovered() ? 'hotpink' : 'orange'" />
+      <ngt-mesh-basic-material [color]="'orange'" />
     </ngt-mesh>
 
     <ngt-grid-helper />
@@ -56,20 +19,11 @@ export class CursorPointer {
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CursorPointer, NgtsOrbitControls, NgtsPerspectiveCamera],
+  imports: [NgtsOrbitControls, NgtsPerspectiveCamera],
 })
 export class Experience {
-  private meshRef = viewChild.required<ElementRef<Mesh>>('mesh');
-
-  protected hovered = signal(false);
-  protected clicked = signal(false);
-
   constructor() {
     extend({ Mesh, BoxGeometry, MeshBasicMaterial, GridHelper });
-    injectBeforeRender(({ delta }) => {
-      const mesh = this.meshRef().nativeElement;
-      mesh.rotation.x += delta;
-      mesh.rotation.y += delta;
-    });
+    injectBeforeRender(({ delta }) => {});
   }
 }
