@@ -32,9 +32,6 @@ importers:
       '@angular/router':
         specifier: ^19.0.5
         version: 19.2.11(@angular/common@19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(@angular/platform-browser@19.2.11(@angular/animations@19.2.11(@angular/common@19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0)))(@angular/common@19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0)))(rxjs@7.8.2)
-      '@dimforge/rapier3d-compat':
-        specifier: ^0.17.0
-        version: 0.17.0
       '@monogrid/gainmap-js':
         specifier: ^3.1.0
         version: 3.1.0(three@0.171.0)
@@ -44,9 +41,6 @@ importers:
       angular-three:
         specifier: ^3.4.0
         version: 3.7.2(@angular/common@19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(ngxtension@4.5.0(@angular/common@19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(three@0.171.0)(typescript@5.5.4)
-      angular-three-rapier:
-        specifier: ^3.7.2
-        version: 3.7.2(@angular/common@19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(@dimforge/rapier3d-compat@0.17.0)(three@0.171.0)
       angular-three-soba:
         specifier: ^3.4.0
         version: 3.7.2(@angular/common@19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(@monogrid/gainmap-js@3.1.0(three@0.171.0))(@pmndrs/vanilla@1.20.4(three@0.171.0))(camera-controls@2.10.1(three@0.171.0))(maath@0.10.8(@types/three@0.171.0)(three@0.171.0))(stats-gl@2.4.2(@types/three@0.171.0)(three@0.171.0))(three-custom-shader-material@6.3.6(three@0.171.0))(three-mesh-bvh@0.8.3(three@0.171.0))(three-stdlib@2.36.0(three@0.171.0))(three@0.171.0)(troika-three-text@0.52.4(three@0.171.0))
@@ -344,9 +338,6 @@ packages:
   '@babel/types@7.27.1':
     resolution: {integrity: sha512-+EzkxvLNfiUeKMgy/3luqfsCWFRXLb7U6wNQTk60tovuckwB15B191tJWvpp4HjiQWdJkCxO3Wbvc6jlk3Xb2Q==}
     engines: {node: '>=6.9.0'}
-
-  '@dimforge/rapier3d-compat@0.17.0':
-    resolution: {integrity: sha512-Oq2EOLm4M+qnHbVEus3+ucls0x/P8ExomlsElQ89GQ4LSBsn1LNVET8UzSXIo47HAIe3lEUQltGCzDoc7+4uZQ==}
 
   '@emnapi/core@1.4.3':
     resolution: {integrity: sha512-4m62DuCE07lw01soJwPiBGC0nAww0Q+RY70VZ+n49yDIO13yyinhbWCeNnaob0lakDtWQzSdtNWzJeOJt2ma+g==}
@@ -1264,14 +1255,6 @@ packages:
 
   ajv@8.17.1:
     resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
-
-  angular-three-rapier@3.7.2:
-    resolution: {integrity: sha512-KW3u7jooso4KyWSGFjPSkNZP1ZRnCM2BE8XDzJO6+6JK22NwpDqmm7TNhd2Y5ZoNgqj67xuGtQN7XqfK7c5zZA==}
-    peerDependencies:
-      '@angular/common': '>=19.0.0 <20.0.0'
-      '@angular/core': '>=19.0.0 <20.0.0'
-      '@dimforge/rapier3d-compat': ~0.14.0
-      three: '>=0.148.0 <0.173.0'
 
   angular-three-soba@3.7.2:
     resolution: {integrity: sha512-uNy3uBgOQxemtcoHyhUg9K+LeHh9dlcBqoJCHJPNIq5ww3SwTc6kGKy6fNjeJNAnOfyWjegsc5dQQMtUVzNA6w==}
@@ -3357,8 +3340,6 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
-  '@dimforge/rapier3d-compat@0.17.0': {}
-
   '@emnapi/core@1.4.3':
     dependencies:
       '@emnapi/wasi-threads': 1.0.2
@@ -4065,14 +4046,6 @@ snapshots:
       fast-uri: 3.0.6
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
-
-  angular-three-rapier@3.7.2(@angular/common@19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(@dimforge/rapier3d-compat@0.17.0)(three@0.171.0):
-    dependencies:
-      '@angular/common': 19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2)
-      '@angular/core': 19.2.11(rxjs@7.8.2)(zone.js@0.15.0)
-      '@dimforge/rapier3d-compat': 0.17.0
-      three: 0.171.0
-      tslib: 2.8.1
 
   angular-three-soba@3.7.2(@angular/common@19.2.11(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(rxjs@7.8.2))(@angular/core@19.2.11(rxjs@7.8.2)(zone.js@0.15.0))(@monogrid/gainmap-js@3.1.0(three@0.171.0))(@pmndrs/vanilla@1.20.4(three@0.171.0))(camera-controls@2.10.1(three@0.171.0))(maath@0.10.8(@types/three@0.171.0)(three@0.171.0))(stats-gl@2.4.2(@types/three@0.171.0)(three@0.171.0))(three-custom-shader-material@6.3.6(three@0.171.0))(three-mesh-bvh@0.8.3(three@0.171.0))(three-stdlib@2.36.0(three@0.171.0))(three@0.171.0)(troika-three-text@0.52.4(three@0.171.0)):
     dependencies:
