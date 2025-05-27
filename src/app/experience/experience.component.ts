@@ -1,66 +1,73 @@
-import {
-  CUSTOM_ELEMENTS_SCHEMA,
-  ChangeDetectionStrategy,
-  Component,
-  ElementRef,
-  effect,
-  viewChild,
-} from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extend, injectBeforeRender, injectStore } from 'angular-three';
+import { NgtrCapsuleCollider, NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } from 'angular-three-rapier';
 import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
 import { filter, fromEvent } from 'rxjs';
-import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Raycaster, Vector3 } from 'three';
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
+import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
 
 @Component({
   template: `
-    <ngts-perspective-camera [options]="{ makeDefault: true, position: [0, 1.6, 5] }" />
+    <ngtr-physics [options]="{ debug: true, gravity: [0, -9.81, 0] }">
+      <ng-template>
+        <!-- Static floor -->
+        <ngt-object3D ngtrRigidBody="fixed" [options]="{ colliders: false }">
+          <ngt-grid-helper />
+          <!-- large, thin box collider under the plane -->
+          <ngt-object3D ngtrCuboidCollider [args]="[50, 0.1, 50]" />
+        </ngt-object3D>
 
-    <ngt-mesh [position]="[0, 0.5, 0]">
-      <ngt-box-geometry />
-      <ngt-mesh-basic-material [color]="'orange'" />
-    </ngt-mesh>
+        <!-- Dynamic player body with camera & controls -->
+        <ngt-object3D
+          ngtrRigidBody
+          [position]="[0, 21, 5]"
+          [options]="{
+            mass: 1,
+            enabledRotations: [false, false, false],
+          }"
+        >
+          <!-- your camera & pointer lock controls -->
+          <!-- <ngts-perspective-camera [options]="{ makeDefault: true, position: [0, 1.6, 5] }" /> -->
+          <ngts-perspective-camera [options]="{ makeDefault: true }" />
 
-    <ngt-mesh [position]="[1, 0.5, 0]">
-      <ngt-box-geometry />
-      <ngt-mesh-basic-material [color]="'hotpink'" />
-    </ngt-mesh>
+          <!-- capsule collider around the camera -->
+          <ngt-object3D ngtrCapsuleCollider [args]="[0.5, 1]" />
+        </ngt-object3D>
 
-    <ngt-mesh [position]="[0, 0.5, 2]">
-      <ngt-box-geometry />
-      <ngt-mesh-basic-material [color]="'orange'" />
-    </ngt-mesh>
+        <ngt-mesh [position]="[0, 0.5, 0]">
+          <ngt-box-geometry />
+          <ngt-mesh-basic-material [color]="'orange'" />
+        </ngt-mesh>
 
-    <ngt-mesh [position]="[1, 0.5, 2]">
-      <ngt-box-geometry />
-      <ngt-mesh-basic-material [color]="'hotpink'" />
-    </ngt-mesh>
+        <ngt-mesh [position]="[1, 0.5, 0]">
+          <ngt-box-geometry />
+          <ngt-mesh-basic-material [color]="'hotpink'" />
+        </ngt-mesh>
 
-    <!-- <ngt-grid-helper #floor /> -->
-    <ngt-mesh #floor [rotation]="[-Math.PI / 2, 0, 0]">
-      <ngt-plane-geometry [args]="[100, 100]" />
-      <ngt-mesh-standard-material [color]="'lightgray'" />
-    </ngt-mesh>
+        <ngt-mesh [position]="[0, 0.5, 2]">
+          <ngt-box-geometry />
+          <ngt-mesh-basic-material [color]="'orange'" />
+        </ngt-mesh>
+
+        <ngt-mesh [position]="[1, 0.5, 2]">
+          <ngt-box-geometry />
+          <ngt-mesh-basic-material [color]="'hotpink'" />
+        </ngt-mesh>
+      </ng-template>
+    </ngtr-physics>
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgtsPerspectiveCamera],
+  imports: [NgtsPerspectiveCamera, NgtrPhysics, NgtrRigidBody, NgtrCuboidCollider, NgtrCapsuleCollider],
 })
 export class Experience {
-  controls?: PointerLockControls;
+  // controls?: PointerLockControls;
   private keys = new Set<string>();
 
-  // grab camera, renderer, scene out of the NgtCanvas store
   private store = injectStore();
-  private floor = viewChild<ElementRef<GridHelper>>('floor');
   private camera = this.store.select('camera');
   private gl = this.store.select('gl');
   private scene = this.store.select('scene');
-
-  private velocity = new Vector3();
-  private raycaster = new Raycaster();
-  private readonly eyeHeight = 1.6; // camera "eye" height above floor
   protected Math = Math;
 
   constructor() {
@@ -80,57 +87,33 @@ export class Experience {
       )
       .subscribe((e) => this.keys.delete(e.key.toLowerCase()));
 
-    effect(() => {
-      const cam = this.camera();
-      const renderer = this.gl();
-      const scene = this.scene();
-      if (!cam || !renderer || !scene || this.controls) return;
-
-      this.controls = new PointerLockControls(cam, renderer.domElement);
-      const obj = this.controls.object;
-      scene.add(obj);
-    });
+    // effect(() => {
+    //   const cam = this.camera();
+    //   const renderer = this.gl();
+    //   const scene = this.scene();
+    //   if (!cam || !renderer || !scene || this.controls) return;
+    //
+    //   this.controls = new PointerLockControls(cam, renderer.domElement);
+    //   const obj = this.controls.object;
+    //   scene.add(obj);
+    // });
 
     // lock pointer on click
-    effect(() => {
-      const dom = this.gl()?.domElement;
-      if (!dom || !this.controls) return;
-      dom.addEventListener('click', () => this.controls!.lock());
-    });
+    // effect(() => {
+    //   const dom = this.gl()?.domElement;
+    //   if (!dom || !this.controls) return;
+    //   dom.addEventListener('click', () => this.controls!.lock());
+    // });
 
     injectBeforeRender(({ delta }) => {
-      const controls = this.controls;
-      const floor = this.floor()?.nativeElement;
-      if (!controls || !floor) return;
-
-      const obj = controls.object;
-
-      //gravity
-      this.velocity.y += -9.81 * delta;
-
-      // raycast down from camera to detect floor
-      this.raycaster.set(obj.position, new Vector3(0, -1, 0));
-      const hits = this.raycaster.intersectObject(floor as any, false);
-      const dist = hits.length ? hits[0].distance : Infinity;
-      const onFloor = dist <= this.eyeHeight + 0.001;
-
-      if (onFloor) {
-        // if on floor, lock height and kill downward velocity
-        this.velocity.y = Math.max(0, this.velocity.y);
-        obj.position.y = this.eyeHeight;
-      } else {
-        // apply falling
-        obj.position.addScaledVector(this.velocity, delta);
-      }
-
-      // movement
-      const speed = 5 * delta;
-      if (this.keys.has('w')) controls.moveForward(speed);
-      if (this.keys.has('s')) controls.moveForward(-speed);
-      if (this.keys.has('a')) controls.moveRight(-speed);
-      if (this.keys.has('d')) controls.moveRight(speed);
-
-      controls.update(delta);
+      // // movement
+      // const speed = 5 * delta;
+      // if (this.keys.has('w')) controls.moveForward(speed);
+      // if (this.keys.has('s')) controls.moveForward(-speed);
+      // if (this.keys.has('a')) controls.moveRight(-speed);
+      // if (this.keys.has('d')) controls.moveRight(speed);
+      //
+      // controls.update(delta);
     });
   }
 }
