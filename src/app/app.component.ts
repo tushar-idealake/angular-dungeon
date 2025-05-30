@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { NgtCanvas } from 'angular-three';
-import { Experience } from './experience/experience.component';
+import { Dungeon } from './dungeon/dungeon.component';
 
 @Component({
   selector: 'app-root',
@@ -11,5 +11,5 @@ import { Experience } from './experience/experience.component';
   imports: [NgtCanvas],
 })
 export class AppComponent {
-  sceneGraph = Experience;
+  sceneGraph = Dungeon;
 }
