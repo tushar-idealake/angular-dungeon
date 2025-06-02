@@ -1,10 +1,12 @@
-import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, effect, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { extend, injectBeforeRender, injectStore } from 'angular-three';
 import { NgtrCapsuleCollider, NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } from 'angular-three-rapier';
 import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
 import { filter, fromEvent } from 'rxjs';
 import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from 'three';
+
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
 @Component({
   template: `
@@ -58,10 +60,15 @@ import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector
   imports: [NgtsPerspectiveCamera, NgtrPhysics, NgtrRigidBody, NgtrCuboidCollider, NgtrCapsuleCollider],
 })
 export class Dungeon {
+  private controls!: PointerLockControls;
   private player = viewChild<NgtrRigidBody>('player');
 
   private keys = new Set<string>();
   private store = injectStore();
+  private camera = this.store.select('camera');
+  private gl = this.store.select('gl');
+  private scene = this.store.select('scene');
+
   protected Math = Math;
 
   constructor() {
@@ -81,25 +88,45 @@ export class Dungeon {
       )
       .subscribe((e) => this.keys.delete(e.key.toLowerCase()));
 
+    effect(() => {
+      const cam = this.camera();
+      const renderer = this.gl();
+      const scene = this.scene();
+
+      if (!cam || !renderer || !scene || this.controls) return;
+
+      this.controls = new PointerLockControls(cam, renderer.domElement);
+      const obj = this.controls.object;
+      scene.add(obj);
+    });
+
+    // lock pointer on click
+    effect(() => {
+      const dom = this.gl()?.domElement;
+      if (!dom || !this.controls) return;
+      dom.addEventListener('click', () => this.controls!.lock());
+    });
+
     injectBeforeRender(({ delta, scene, camera }) => {
       const body = this.player()?.rigidBody();
-      if (!body) return;
-      // build a local input vector
+      const controls = this.controls;
+      if (!body || !controls) return;
+
+      controls.update(delta);
+
       const dir = new Vector3();
       if (this.keys.has('w')) dir.z -= 1;
       if (this.keys.has('s')) dir.z += 1;
       if (this.keys.has('a')) dir.x -= 1;
       if (this.keys.has('d')) dir.x += 1;
 
-      if (dir.lengthSq() > 0) {
-        dir.normalize().multiplyScalar(500 * delta); // 5 units/sec
-        // rotate to camera’s yaw:
-        dir.applyQuaternion((camera as any).quaternion);
-
-        // set the body’s linear velocity (wake it up)
+      if (dir.lengthSq()) {
+        dir
+          .normalize()
+          .multiplyScalar(500 * delta)
+          .applyQuaternion(camera.quaternion);
         body.setLinvel({ x: dir.x, y: 0, z: dir.z }, true);
       } else {
-        // slow to stop
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
       }
     });
