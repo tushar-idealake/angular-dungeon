@@ -4,9 +4,8 @@ import { extend, injectBeforeRender, injectStore } from 'angular-three';
 import { NgtrCapsuleCollider, NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } from 'angular-three-rapier';
 import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
 import { filter, fromEvent } from 'rxjs';
-import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from 'three';
+import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3, Euler } from 'three';
 
-import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 
 @Component({
   template: `
@@ -60,7 +59,6 @@ import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockCont
   imports: [NgtsPerspectiveCamera, NgtrPhysics, NgtrRigidBody, NgtrCuboidCollider, NgtrCapsuleCollider],
 })
 export class Dungeon {
-  private controls!: PointerLockControls;
   private player = viewChild<NgtrRigidBody>('player');
 
   private keys = new Set<string>();
@@ -88,32 +86,42 @@ export class Dungeon {
       )
       .subscribe((e) => this.keys.delete(e.key.toLowerCase()));
 
+    // pointer lock and mouse look
     effect(() => {
       const cam = this.camera();
       const renderer = this.gl();
-      const scene = this.scene();
-
-      if (!cam || !renderer || !scene || this.controls) return;
-
-      this.controls = new PointerLockControls(cam, renderer.domElement);
-      const obj = this.controls.object;
-      scene.add(obj);
+      if (!cam || !renderer) return;
+      const canvas = renderer.domElement;
+      // request pointer lock on click
+      const onClick = () => canvas.requestPointerLock();
+      canvas.addEventListener('click', onClick);
+      // handle pointer movement when locked
+      const sub = fromEvent<PointerEvent>(document, 'pointermove')
+        .pipe(filter(() => document.pointerLockElement === canvas))
+        .subscribe((event) => {
+          const euler = new Euler(0, 0, 0, 'YXZ');
+          euler.setFromQuaternion(cam.quaternion);
+          euler.y -= event.movementX * 0.002;
+          euler.x -= event.movementY * 0.002;
+          const PI_2 = Math.PI / 2;
+          euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
+          cam.quaternion.setFromEuler(euler);
+        });
+      return () => {
+        canvas.removeEventListener('click', onClick);
+        sub.unsubscribe();
+      };
     });
 
-    // lock pointer on click
-    effect(() => {
-      const dom = this.gl()?.domElement;
-      if (!dom || !this.controls) return;
-      dom.addEventListener('click', () => this.controls!.lock());
-    });
-
-    injectBeforeRender(({ delta, scene, camera }) => {
+    injectBeforeRender(({ delta, camera }) => {
       const body = this.player()?.rigidBody();
-      const controls = this.controls;
-      if (!body || !controls) return;
+      if (!body) return;
 
-      controls.update(delta);
+      // sync camera position with physics body
+      const pos = body.translation();
+      camera.position.set(pos.x, pos.y, pos.z);
 
+      // movement input relative to camera orientation
       const dir = new Vector3();
       if (this.keys.has('w')) dir.z -= 1;
       if (this.keys.has('s')) dir.z += 1;
@@ -121,10 +129,7 @@ export class Dungeon {
       if (this.keys.has('d')) dir.x += 1;
 
       if (dir.lengthSq()) {
-        dir
-          .normalize()
-          .multiplyScalar(500 * delta)
-          .applyQuaternion(camera.quaternion);
+        dir.normalize().multiplyScalar(500 * delta).applyQuaternion(camera.quaternion);
         body.setLinvel({ x: dir.x, y: 0, z: dir.z }, true);
       } else {
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
