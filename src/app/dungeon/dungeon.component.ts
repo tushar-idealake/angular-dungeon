@@ -1,11 +1,10 @@
 import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, effect, viewChild } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectBeforeRender, injectStore } from 'angular-three';
 import { NgtrCapsuleCollider, NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } from 'angular-three-rapier';
 import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
-import { filter, fromEvent } from 'rxjs';
-import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3, Euler } from 'three';
-
+import { filter, fromEvent, merge, scan } from 'rxjs';
+import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from 'three';
 
 @Component({
   template: `
@@ -61,30 +60,26 @@ import { BoxGeometry, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector
 export class Dungeon {
   private player = viewChild<NgtrRigidBody>('player');
 
-  private keys = new Set<string>();
   private store = injectStore();
   private camera = this.store.select('camera');
   private gl = this.store.select('gl');
   private scene = this.store.select('scene');
 
   protected Math = Math;
+  private keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
+  private keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');
+  private wasd$ = merge(this.keydown$, this.keyup$).pipe(
+    filter((e) => ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())),
+    scan((acc, curr) => {
+      if (curr.type === 'keyup') acc.delete(curr.key.toLowerCase());
+      if (curr.type === 'keydown') acc.add(curr.key.toLowerCase());
+      return acc;
+    }, new Set<string>()),
+  );
+  private wasd = toSignal(this.wasd$, { initialValue: new Set<string>() });
 
   constructor() {
     extend({ Mesh, BoxGeometry, PlaneGeometry, MeshBasicMaterial, GridHelper });
-
-    fromEvent<KeyboardEvent>(document, 'keydown')
-      .pipe(
-        filter((e) => ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())),
-        takeUntilDestroyed(),
-      )
-      .subscribe((e) => this.keys.add(e.key.toLowerCase()));
-
-    fromEvent<KeyboardEvent>(document, 'keyup')
-      .pipe(
-        filter((e) => ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())),
-        takeUntilDestroyed(),
-      )
-      .subscribe((e) => this.keys.delete(e.key.toLowerCase()));
 
     // pointer lock and mouse look
     effect(() => {
@@ -123,13 +118,17 @@ export class Dungeon {
 
       // movement input relative to camera orientation
       const dir = new Vector3();
-      if (this.keys.has('w')) dir.z -= 1;
-      if (this.keys.has('s')) dir.z += 1;
-      if (this.keys.has('a')) dir.x -= 1;
-      if (this.keys.has('d')) dir.x += 1;
+      const wasd = this.wasd();
+      if (wasd.has('w')) dir.z -= 1;
+      if (wasd.has('s')) dir.z += 1;
+      if (wasd.has('a')) dir.x -= 1;
+      if (wasd.has('d')) dir.x += 1;
 
       if (dir.lengthSq()) {
-        dir.normalize().multiplyScalar(500 * delta).applyQuaternion(camera.quaternion);
+        dir
+          .normalize()
+          .multiplyScalar(500 * delta)
+          .applyQuaternion(camera.quaternion);
         body.setLinvel({ x: dir.x, y: 0, z: dir.z }, true);
       } else {
         body.setLinvel({ x: 0, y: 0, z: 0 }, true);
