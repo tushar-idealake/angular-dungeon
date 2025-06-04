@@ -18,14 +18,14 @@ import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry,
         <ngt-object3D
           #player
           ngtrRigidBody
-          [position]="[0, 2, 5]"
+          [position]="[0, 0.5, 5]"
           [options]="{
             mass: 1,
             enabledRotations: [false, false, false],
           }"
         >
           <ngts-perspective-camera [options]="{ makeDefault: true }" />
-          <ngt-object3D ngtrCapsuleCollider [args]="[0.5, 1]" />
+          <ngt-object3D ngtrCapsuleCollider [args]="[0.05, 0.0125]" />
         </ngt-object3D>
 
         <!-- walls -->
@@ -134,7 +134,7 @@ export class Dungeon {
       if (dir.lengthSq()) {
         dir
           .normalize()
-          .multiplyScalar(500 * delta)
+          .multiplyScalar(100 * delta)
           .applyQuaternion(camera.quaternion);
         body.setLinvel({ x: dir.x, y: 0, z: dir.z }, true);
       } else {
