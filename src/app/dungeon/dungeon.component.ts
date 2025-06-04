@@ -1,9 +1,9 @@
 import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, effect, viewChild } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectBeforeRender, injectStore } from 'angular-three';
 import { NgtrCapsuleCollider, NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } from 'angular-three-rapier';
 import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
-import { filter, fromEvent, merge, scan } from 'rxjs';
+import { filter, fromEvent, merge, scan, withLatestFrom } from 'rxjs';
 import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from 'three';
 
 @Component({
@@ -64,6 +64,8 @@ export class Dungeon {
   private camera = this.store.select('camera');
   private gl = this.store.select('gl');
   private scene = this.store.select('scene');
+  private camera$ = toObservable(this.camera);
+  private gl$ = toObservable(this.gl);
 
   protected Math = Math;
   private keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
@@ -81,32 +83,37 @@ export class Dungeon {
   constructor() {
     extend({ Mesh, BoxGeometry, PlaneGeometry, MeshBasicMaterial, GridHelper });
 
-    // pointer lock and mouse look
+    // pointer lock
     effect(() => {
-      const cam = this.camera();
       const renderer = this.gl();
-      if (!cam || !renderer) return;
-      const canvas = renderer.domElement;
-      // request pointer lock on click
-      const onClick = () => canvas.requestPointerLock();
-      canvas.addEventListener('click', onClick);
-      // handle pointer movement when locked
-      const sub = fromEvent<PointerEvent>(document, 'pointermove')
-        .pipe(filter(() => document.pointerLockElement === canvas))
-        .subscribe((event) => {
-          const euler = new Euler(0, 0, 0, 'YXZ');
-          euler.setFromQuaternion(cam.quaternion);
-          euler.y -= event.movementX * 0.002;
-          euler.x -= event.movementY * 0.002;
-          const PI_2 = Math.PI / 2;
-          euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
-          cam.quaternion.setFromEuler(euler);
-        });
+      if (!renderer) return;
+
+      const onClick = () => {
+        renderer.domElement.requestPointerLock();
+      };
+      renderer.domElement.addEventListener('click', onClick);
+
       return () => {
-        canvas.removeEventListener('click', onClick);
-        sub.unsubscribe();
+        renderer.domElement.removeEventListener('click', onClick);
       };
     });
+
+    // mouse look
+    fromEvent<PointerEvent>(document, 'pointermove')
+      .pipe(
+        withLatestFrom(this.gl$, this.camera$),
+        filter(([_, renderer]) => document.pointerLockElement === renderer.domElement),
+        takeUntilDestroyed(),
+      )
+      .subscribe(([event, _, camera]) => {
+        const euler = new Euler(0, 0, 0, 'YXZ');
+        euler.setFromQuaternion(camera.quaternion);
+        euler.y -= event.movementX * 0.002;
+        euler.x -= event.movementY * 0.002;
+        const PI_2 = Math.PI / 2;
+        euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
+        camera.quaternion.setFromEuler(euler);
+      });
 
     injectBeforeRender(({ delta, camera }) => {
       const body = this.player()?.rigidBody();
