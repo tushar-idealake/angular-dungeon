@@ -8,7 +8,7 @@ import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry,
 
 @Component({
   template: `
-    <ngtr-physics [options]="{ gravity: [0, -9.81, 0] }">
+    <ngtr-physics [options]="{ gravity: [0, -9.81, 0], colliders: false }">
       <ng-template>
         <!-- floor -->
         <ngt-object3D ngtrRigidBody="fixed" [position]="[0, -1, 0]"></ngt-object3D>
@@ -28,26 +28,37 @@ import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry,
           <ngt-object3D ngtrCapsuleCollider [args]="[0.05, 0.0125]" />
         </ngt-object3D>
 
-        <!-- walls -->
-        <ngt-mesh [position]="[0, 0.5, 0]">
-          <ngt-box-geometry />
-          <ngt-mesh-basic-material [color]="'orange'" />
-        </ngt-mesh>
+        <!-- walls (static colliders for player collision) -->
+        <ngt-object3D ngtrRigidBody="fixed" [position]="[0, 0.5, 0]">
+          <ngt-mesh>
+            <ngt-box-geometry />
+            <ngt-mesh-basic-material [color]="'orange'" />
+          </ngt-mesh>
+          <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" />
+        </ngt-object3D>
 
-        <ngt-mesh [position]="[1, 0.5, 0]">
-          <ngt-box-geometry />
-          <ngt-mesh-basic-material [color]="'hotpink'" />
-        </ngt-mesh>
+        <ngt-object3D ngtrRigidBody="fixed" [position]="[1, 0.5, 0]">
+          <ngt-mesh>
+            <ngt-box-geometry />
+            <ngt-mesh-basic-material [color]="'hotpink'" />
+          </ngt-mesh>
+          <!-- <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" /> -->
+        </ngt-object3D>
 
-        <ngt-mesh [position]="[0, 0.5, 2]">
-          <ngt-box-geometry />
-          <ngt-mesh-basic-material [color]="'orange'" />
-        </ngt-mesh>
+        <ngt-object3D ngtrRigidBody="fixed" [position]="[0, 0.5, 2]">
+          <ngt-mesh>
+            <ngt-box-geometry />
+            <ngt-mesh-basic-material [color]="'red'" />
+          </ngt-mesh>
+          <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" />
+        </ngt-object3D>
 
-        <ngt-mesh [position]="[1, 0.5, 2]">
-          <ngt-box-geometry />
-          <ngt-mesh-basic-material [color]="'hotpink'" />
-        </ngt-mesh>
+        <ngt-object3D ngtrRigidBody="fixed" [position]="[1, 0.5, 2]">
+          <ngt-mesh>
+            <ngt-box-geometry />
+            <ngt-mesh-basic-material [color]="'blue'" />
+          </ngt-mesh>
+        </ngt-object3D>
       </ng-template>
     </ngtr-physics>
 
