@@ -17,7 +17,7 @@
     "@angular/platform-browser": "^19.0.5",
     "@angular/platform-browser-dynamic": "^19.0.5",
     "@angular/router": "^19.0.5",
-    "@dimforge/rapier3d-compat": "^0.17.0",
+    "@dimforge/rapier3d-compat": "^0.14.0",
     "@monogrid/gainmap-js": "^3.1.0",
     "@pmndrs/vanilla": "^1.20.2",
     "angular-three": "^3.4.0",

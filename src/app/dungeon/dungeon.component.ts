@@ -29,36 +29,19 @@ import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry,
         </ngt-object3D>
 
         <!-- walls (static colliders for player collision) -->
-        <ngt-object3D ngtrRigidBody="fixed" [position]="[0, 0.5, 0]">
-          <ngt-mesh>
-            <ngt-box-geometry />
-            <ngt-mesh-basic-material [color]="'orange'" />
-          </ngt-mesh>
-          <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" />
-        </ngt-object3D>
-
-        <ngt-object3D ngtrRigidBody="fixed" [position]="[1, 0.5, 0]">
-          <ngt-mesh>
-            <ngt-box-geometry />
-            <ngt-mesh-basic-material [color]="'hotpink'" />
-          </ngt-mesh>
-          <!-- <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" /> -->
-        </ngt-object3D>
-
-        <ngt-object3D ngtrRigidBody="fixed" [position]="[0, 0.5, 2]">
-          <ngt-mesh>
-            <ngt-box-geometry />
-            <ngt-mesh-basic-material [color]="'red'" />
-          </ngt-mesh>
-          <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" />
-        </ngt-object3D>
-
-        <ngt-object3D ngtrRigidBody="fixed" [position]="[1, 0.5, 2]">
-          <ngt-mesh>
-            <ngt-box-geometry />
-            <ngt-mesh-basic-material [color]="'blue'" />
-          </ngt-mesh>
-        </ngt-object3D>
+        @for (row of layout; track $index; let y = $index) {
+          @for (wall of row; track $index; let x = $index) {
+            @if (wall === '1') {
+              <ngt-object3D ngtrRigidBody="fixed" [position]="[x, 0.5, y]">
+                <ngt-mesh>
+                  <ngt-box-geometry />
+                  <ngt-mesh-basic-material [color]="'orange'" />
+                </ngt-mesh>
+                <!-- <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" /> -->
+              </ngt-object3D>
+            }
+          }
+        }
       </ng-template>
     </ngtr-physics>
 
@@ -70,6 +53,12 @@ import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry,
 })
 export class Dungeon {
   private player = viewChild<NgtrRigidBody>('player');
+
+  protected layout = [
+    ['1', '1', '1'],
+    ['1', '0', '1'],
+    ['1', '0', '1'],
+  ];
 
   private store = injectStore();
   private camera = this.store.select('camera');
