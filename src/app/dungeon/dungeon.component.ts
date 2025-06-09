@@ -55,9 +55,12 @@ export class Dungeon {
   private player = viewChild<NgtrRigidBody>('player');
 
   protected layout = [
-    ['1', '1', '1'],
-    ['1', '0', '1'],
-    ['1', '0', '1'],
+    ['1', '1', '1', '1', '1'],
+    ['1', '0', '0', '1', '1'],
+    ['1', '0', '0', '0', '1'],
+    ['1', '0', '1', '0', '1'],
+    ['1', '0', '0', '1', '1'],
+    ['1', '1', '0', '1', '1'],
   ];
 
   private store = injectStore();
