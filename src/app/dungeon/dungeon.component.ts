@@ -1,8 +1,9 @@
-import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, effect, viewChild } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, effect, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectBeforeRender, injectStore } from 'angular-three';
 import { NgtrCapsuleCollider, NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } from 'angular-three-rapier';
 import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
+import { injectTexture } from 'angular-three-soba/loaders';
 import { filter, fromEvent, merge, scan, withLatestFrom } from 'rxjs';
 import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from 'three';
 
@@ -35,7 +36,7 @@ import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry,
               <ngt-object3D ngtrRigidBody="fixed" [position]="[x, 0.5, y]">
                 <ngt-mesh>
                   <ngt-box-geometry />
-                  <ngt-mesh-basic-material [color]="'orange'" />
+                  <ngt-mesh-basic-material [map]="wallsMap()" />
                 </ngt-mesh>
                 <!-- <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" /> -->
               </ngt-object3D>
@@ -53,6 +54,11 @@ import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry,
 })
 export class Dungeon {
   private player = viewChild<NgtrRigidBody>('player');
+
+  textures = injectTexture(() => ({
+    walls: './textures/wall.png',
+  }));
+  wallsMap = computed(() => this.textures()?.walls || null);
 
   protected layout = [
     ['1', '1', '1', '1', '1'],
