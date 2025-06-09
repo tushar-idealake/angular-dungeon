@@ -5,7 +5,7 @@ import { NgtrCapsuleCollider, NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } f
 import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
 import { injectTexture } from 'angular-three-soba/loaders';
 import { filter, fromEvent, merge, scan, withLatestFrom } from 'rxjs';
-import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, PlaneGeometry, Vector3 } from 'three';
+import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, NearestFilter, PlaneGeometry, Vector3 } from 'three';
 
 @Component({
   template: `
@@ -91,6 +91,16 @@ export class Dungeon {
 
   constructor() {
     extend({ Mesh, BoxGeometry, PlaneGeometry, MeshBasicMaterial, GridHelper });
+
+    // nearest neighbor
+    effect(() => {
+      const map = this.wallsMap();
+      if (!map) return;
+      map.magFilter = NearestFilter;
+      map.minFilter = NearestFilter;
+      map.generateMipmaps = false;
+      map.needsUpdate = true;
+    });
 
     // pointer lock
     effect(() => {
