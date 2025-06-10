@@ -12,6 +12,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
+  Object3D,
   PlaneGeometry,
   RepeatWrapping,
   Vector3,
@@ -57,7 +58,7 @@ import {
                   <ngt-box-geometry />
                   <ngt-mesh-basic-material [map]="wallsMap()" />
                 </ngt-mesh>
-                <!-- <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" /> -->
+                <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" />
               </ngt-object3D>
             }
           }
@@ -109,7 +110,7 @@ export class Dungeon {
   private wasd = toSignal(this.wasd$, { initialValue: new Set<string>() });
 
   constructor() {
-    extend({ Mesh, BoxGeometry, PlaneGeometry, MeshBasicMaterial, GridHelper });
+    extend({ Mesh, BoxGeometry, PlaneGeometry, MeshBasicMaterial, GridHelper, Object3D });
 
     // nearest neighbor + repeat tiling for walls and roof textures
     effect(() => {
