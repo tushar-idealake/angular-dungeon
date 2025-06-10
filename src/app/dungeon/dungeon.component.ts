@@ -1,14 +1,17 @@
 import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, effect, viewChild } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectBeforeRender, injectStore } from 'angular-three';
-import { NgtrCapsuleCollider, NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } from 'angular-three-rapier';
-import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
+import { NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } from 'angular-three-rapier';
 import { injectTexture } from 'angular-three-soba/loaders';
 import { filter, fromEvent, merge, scan, withLatestFrom } from 'rxjs';
 import {
   BoxGeometry,
+  BufferAttribute,
+  BufferGeometry,
   Euler,
   GridHelper,
+  LineBasicMaterial,
+  LineSegments,
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
@@ -20,14 +23,14 @@ import {
 
 @Component({
   template: `
-    <ngtr-physics [options]="{ gravity: [0, -9.81, 0], colliders: false }">
+    <ngtr-physics [options]="{ gravity: [0, -9.81, 0], debug: true, colliders: false }">
       <ng-template>
         <!-- floor -->
         <ngt-mesh [position]="[0, 0, 0]" [rotation]="[-Math.PI / 2, 0, 0]" [scale]="[10, 10, 1]">
           <ngt-plane-geometry [args]="[1, 1]" />
           <ngt-mesh-basic-material [map]="roofMap()" />
         </ngt-mesh>
-        <ngt-object3D ngtrCuboidCollider [args]="[1000, 0.1, 1000]" />
+        <ngt-object3D ngtrCuboidCollider [args]="[10, 0.1, 10]" />
 
         <!-- roof -->
         <ngt-mesh [position]="[0, 1, 0]" [rotation]="[Math.PI / 2, 0, 0]" [scale]="[10, 10, 1]">
@@ -39,27 +42,24 @@ import {
         <ngt-object3D
           #player
           ngtrRigidBody
-          [position]="[0, 0.5, 5]"
+          [position]="[5, 0.5, 0]"
           [options]="{
             mass: 1,
             enabledRotations: [false, false, false],
           }"
         >
-          <ngts-perspective-camera [options]="{ makeDefault: true }" />
-          <ngt-object3D ngtrCapsuleCollider [args]="[0.05, 0.0125]" />
+          <ngt-object3D ngtrCuboidCollider [args]="[0.2, 0.2, 0.2]" />
         </ngt-object3D>
 
         <!-- walls (static colliders for player collision) -->
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
             @if (wall === '1') {
-              <ngt-object3D ngtrRigidBody="fixed" [position]="[x, 0.5, y]">
-                <ngt-mesh>
-                  <ngt-box-geometry />
-                  <ngt-mesh-basic-material [map]="wallsMap()" />
-                </ngt-mesh>
+              <ngt-mesh ngtrRigidBody="fixed" [position]="[x, 0.5, y]">
+                <ngt-box-geometry />
+                <ngt-mesh-basic-material [map]="wallsMap()" />
                 <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" />
-              </ngt-object3D>
+              </ngt-mesh>
             }
           }
         }
@@ -68,7 +68,7 @@ import {
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgtsPerspectiveCamera, NgtrPhysics, NgtrRigidBody, NgtrCuboidCollider, NgtrCapsuleCollider],
+  imports: [NgtrPhysics, NgtrRigidBody, NgtrCuboidCollider],
 })
 export class Dungeon {
   private player = viewChild<NgtrRigidBody>('player');
@@ -110,7 +110,18 @@ export class Dungeon {
   private wasd = toSignal(this.wasd$, { initialValue: new Set<string>() });
 
   constructor() {
-    extend({ Mesh, BoxGeometry, PlaneGeometry, MeshBasicMaterial, GridHelper, Object3D });
+    extend({
+      Mesh,
+      BoxGeometry,
+      PlaneGeometry,
+      MeshBasicMaterial,
+      GridHelper,
+      Object3D,
+      LineSegments,
+      LineBasicMaterial,
+      BufferGeometry,
+      BufferAttribute,
+    });
 
     // nearest neighbor + repeat tiling for walls and roof textures
     effect(() => {
