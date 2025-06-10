@@ -5,15 +5,34 @@ import { NgtrCapsuleCollider, NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } f
 import { NgtsPerspectiveCamera } from 'angular-three-soba/cameras';
 import { injectTexture } from 'angular-three-soba/loaders';
 import { filter, fromEvent, merge, scan, withLatestFrom } from 'rxjs';
-import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, NearestFilter, PlaneGeometry, Vector3 } from 'three';
+import {
+  BoxGeometry,
+  Euler,
+  GridHelper,
+  Mesh,
+  MeshBasicMaterial,
+  NearestFilter,
+  PlaneGeometry,
+  RepeatWrapping,
+  Vector3,
+} from 'three';
 
 @Component({
   template: `
     <ngtr-physics [options]="{ gravity: [0, -9.81, 0], colliders: false }">
       <ng-template>
         <!-- floor -->
-        <ngt-object3D ngtrRigidBody="fixed" [position]="[0, -1, 0]"></ngt-object3D>
+        <ngt-mesh [position]="[0, 0, 0]" [rotation]="[-Math.PI / 2, 0, 0]" [scale]="[10, 10, 1]">
+          <ngt-plane-geometry [args]="[1, 1]" />
+          <ngt-mesh-basic-material [map]="roofMap()" />
+        </ngt-mesh>
         <ngt-object3D ngtrCuboidCollider [args]="[1000, 0.1, 1000]" />
+
+        <!-- roof -->
+        <ngt-mesh [position]="[0, 1, 0]" [rotation]="[Math.PI / 2, 0, 0]" [scale]="[10, 10, 1]">
+          <ngt-plane-geometry [args]="[1, 1]" />
+          <ngt-mesh-basic-material [map]="roofMap()" />
+        </ngt-mesh>
 
         <!-- camera/player -->
         <ngt-object3D
@@ -45,8 +64,6 @@ import { BoxGeometry, Euler, GridHelper, Mesh, MeshBasicMaterial, NearestFilter,
         }
       </ng-template>
     </ngtr-physics>
-
-    <ngt-grid-helper />
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,8 +74,10 @@ export class Dungeon {
 
   textures = injectTexture(() => ({
     walls: './textures/wall.png',
+    roof: './textures/roof.png',
   }));
   wallsMap = computed(() => this.textures()?.walls || null);
+  roofMap = computed(() => this.textures()?.roof || null);
 
   protected layout = [
     ['1', '1', '1', '1', '1'],
@@ -92,14 +111,28 @@ export class Dungeon {
   constructor() {
     extend({ Mesh, BoxGeometry, PlaneGeometry, MeshBasicMaterial, GridHelper });
 
-    // nearest neighbor
+    // nearest neighbor + repeat tiling for walls and roof textures
     effect(() => {
-      const map = this.wallsMap();
-      if (!map) return;
-      map.magFilter = NearestFilter;
-      map.minFilter = NearestFilter;
-      map.generateMipmaps = false;
-      map.needsUpdate = true;
+      const walls = this.wallsMap();
+      const roof = this.roofMap();
+      if (walls) {
+        walls.magFilter = NearestFilter;
+        walls.minFilter = NearestFilter;
+        walls.generateMipmaps = false;
+        walls.wrapS = RepeatWrapping;
+        walls.wrapT = RepeatWrapping;
+        walls.repeat.set(1, 1);
+        walls.needsUpdate = true;
+      }
+      if (roof) {
+        roof.magFilter = NearestFilter;
+        roof.minFilter = NearestFilter;
+        roof.generateMipmaps = false;
+        roof.wrapS = RepeatWrapping;
+        roof.wrapT = RepeatWrapping;
+        roof.repeat.set(10, 10);
+        roof.needsUpdate = true;
+      }
     });
 
     // pointer lock
