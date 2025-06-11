@@ -23,12 +23,12 @@ import {
 
 @Component({
   template: `
-    <ngtr-physics [options]="{ gravity: [0, -9.81, 0], debug: true, colliders: false }">
+    <ngtr-physics [options]="{ gravity: [0, -9.81, 0], colliders: false }">
       <ng-template>
         <!-- floor -->
         <ngt-mesh [position]="[0, 0, 0]" [rotation]="[-Math.PI / 2, 0, 0]" [scale]="[10, 10, 1]">
           <ngt-plane-geometry [args]="[1, 1]" />
-          <ngt-mesh-basic-material [map]="roofMap()" />
+          <ngt-mesh-basic-material [map]="floorMap()" />
         </ngt-mesh>
         <ngt-object3D ngtrCuboidCollider [args]="[10, 0.1, 10]" />
 
@@ -42,7 +42,7 @@ import {
         <ngt-object3D
           #player
           ngtrRigidBody
-          [position]="[5, 0.5, 0]"
+          [position]="[2, 0.5, 6]"
           [options]="{
             mass: 1,
             enabledRotations: [false, false, false],
@@ -76,9 +76,11 @@ export class Dungeon {
   textures = injectTexture(() => ({
     walls: './textures/wall.png',
     roof: './textures/roof.png',
+    floor: './textures/floor.png',
   }));
   wallsMap = computed(() => this.textures()?.walls || null);
   roofMap = computed(() => this.textures()?.roof || null);
+  floorMap = computed(() => this.textures()?.floor || null);
 
   protected layout = [
     ['1', '1', '1', '1', '1'],
@@ -127,6 +129,7 @@ export class Dungeon {
     effect(() => {
       const walls = this.wallsMap();
       const roof = this.roofMap();
+      const floor = this.floorMap();
       if (walls) {
         walls.magFilter = NearestFilter;
         walls.minFilter = NearestFilter;
@@ -144,6 +147,15 @@ export class Dungeon {
         roof.wrapT = RepeatWrapping;
         roof.repeat.set(10, 10);
         roof.needsUpdate = true;
+      }
+      if (floor) {
+        floor.magFilter = NearestFilter;
+        floor.minFilter = NearestFilter;
+        floor.generateMipmaps = false;
+        floor.wrapS = RepeatWrapping;
+        floor.wrapT = RepeatWrapping;
+        floor.repeat.set(10, 10);
+        floor.needsUpdate = true;
       }
     });
 
