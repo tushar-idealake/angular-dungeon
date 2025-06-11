@@ -65,7 +65,7 @@ import {
             @if (wall === '1') {
               <ngt-mesh
                 ngtrRigidBody="fixed"
-                [position]="[x - Math.floor((layout[0].length - 1) / 2), 0.5, Math.floor(y - (layout.length - 1) / 2)]"
+                [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]"
               >
                 <ngt-box-geometry />
                 <ngt-mesh-basic-material [map]="wallsMap()" />
