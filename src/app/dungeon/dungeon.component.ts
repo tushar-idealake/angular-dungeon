@@ -26,14 +26,22 @@ import {
     <ngtr-physics [options]="{ gravity: [0, -9.81, 0], colliders: false }">
       <ng-template>
         <!-- floor -->
-        <ngt-mesh [position]="[0, 0, 0]" [rotation]="[-Math.PI / 2, 0, 0]" [scale]="[10, 10, 1]">
+        <ngt-mesh
+          [position]="[0, 0, 0]"
+          [rotation]="[-Math.PI / 2, 0, 0]"
+          [scale]="[layout[0].length, layout.length, 1]"
+        >
           <ngt-plane-geometry [args]="[1, 1]" />
           <ngt-mesh-basic-material [map]="floorMap()" />
         </ngt-mesh>
         <ngt-object3D ngtrCuboidCollider [args]="[10, 0.1, 10]" />
 
         <!-- roof -->
-        <ngt-mesh [position]="[0, 1, 0]" [rotation]="[Math.PI / 2, 0, 0]" [scale]="[10, 10, 1]">
+        <ngt-mesh
+          [position]="[0, 1, 0]"
+          [rotation]="[Math.PI / 2, 0, 0]"
+          [scale]="[layout[0].length, layout.length, 1]"
+        >
           <ngt-plane-geometry [args]="[1, 1]" />
           <ngt-mesh-basic-material [map]="roofMap()" />
         </ngt-mesh>
@@ -55,7 +63,10 @@ import {
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
             @if (wall === '1') {
-              <ngt-mesh ngtrRigidBody="fixed" [position]="[x, 0.5, y]">
+              <ngt-mesh
+                ngtrRigidBody="fixed"
+                [position]="[x - Math.floor((layout[0].length - 1) / 2), 0.5, Math.floor(y - (layout.length - 1) / 2)]"
+              >
                 <ngt-box-geometry />
                 <ngt-mesh-basic-material [map]="wallsMap()" />
                 <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" />
