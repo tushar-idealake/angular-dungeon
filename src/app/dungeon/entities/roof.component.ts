@@ -46,7 +46,7 @@ export class RoofComponent {
       roof.generateMipmaps = false;
       roof.wrapS = RepeatWrapping;
       roof.wrapT = RepeatWrapping;
-      roof.repeat.set(10, 10);
+      roof.repeat.set(this.layout().length, this.layout().length);
       roof.needsUpdate = true;
     });
   }

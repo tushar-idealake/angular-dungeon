@@ -48,7 +48,7 @@ export class FloorComponent {
       floor.generateMipmaps = false;
       floor.wrapS = RepeatWrapping;
       floor.wrapT = RepeatWrapping;
-      floor.repeat.set(10, 10);
+      floor.repeat.set(this.layout().length, this.layout().length);
       floor.needsUpdate = true;
     });
   }
