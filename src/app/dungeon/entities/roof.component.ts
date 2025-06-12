@@ -1,41 +1,30 @@
 import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, effect, input } from '@angular/core';
-import { extend } from 'angular-three';
-import { injectTexture } from 'angular-three-soba/loaders';
-import { Mesh, MeshBasicMaterial, NearestFilter, Object3D, PlaneGeometry, RepeatWrapping } from 'three';
+import { extend, NgtArgs } from 'angular-three';
+import { textureResource } from 'angular-three-soba/loaders';
+import { Mesh, MeshBasicMaterial, NearestFilter, PlaneGeometry, RepeatWrapping } from 'three';
 
 @Component({
   selector: 'dungeon-roof',
   template: `
-    <ngt-mesh
-      [position]="[0, 1, 0]"
-      [rotation]="[Math.PI / 2, 0, 0]"
-      [scale]="[layout()[0].length, layout().length, 1]"
-    >
-      <ngt-plane-geometry [args]="[1, 1]" />
+    <ngt-mesh [position.y]="1" [rotation.x]="Math.PI / 2" [scale]="[layout()[0].length, layout().length, 1]">
+      <ngt-plane-geometry *args="[1, 1]" />
       <ngt-mesh-basic-material [map]="roofMap()" />
     </ngt-mesh>
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgtArgs],
 })
 export class RoofComponent {
   layout = input.required<string[][]>();
 
-  textures = injectTexture(() => ({
-    roof: './textures/roof.png',
-  }));
-
-  roofMap = computed(() => this.textures()?.roof || null);
+  textures = textureResource(() => ({ roof: './textures/roof.png' }));
+  roofMap = computed(() => this.textures.value()?.roof || null);
 
   Math = Math;
 
   constructor() {
-    extend({
-      Mesh,
-      PlaneGeometry,
-      MeshBasicMaterial,
-      Object3D,
-    });
+    extend({ Mesh, PlaneGeometry, MeshBasicMaterial });
 
     effect(() => {
       const roof = this.roofMap();
