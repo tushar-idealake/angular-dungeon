@@ -21,6 +21,7 @@ import {
   Vector3,
 } from 'three';
 import { FloorComponent } from './entities/floor.component';
+import { RoofComponent } from './entities/roof.component';
 import { generateDungeonLayout } from './utils/generate-dungeon';
 
 @Component({
@@ -28,16 +29,7 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
     <ngtr-physics [options]="{ gravity: [0, -9.81, 0], debug: true, colliders: false }">
       <ng-template>
         <dungeon-floor [layout]="layout" />
-
-        <!-- roof -->
-        <ngt-mesh
-          [position]="[0, 1, 0]"
-          [rotation]="[Math.PI / 2, 0, 0]"
-          [scale]="[layout[0].length, layout.length, 1]"
-        >
-          <ngt-plane-geometry [args]="[1, 1]" />
-          <ngt-mesh-basic-material [map]="roofMap()" />
-        </ngt-mesh>
+        <dungeon-roof [layout]="layout" />
 
         <!-- camera/player -->
         <ngt-object3D
@@ -72,17 +64,15 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgtrPhysics, NgtrRigidBody, NgtrCuboidCollider, FloorComponent],
+  imports: [NgtrPhysics, NgtrRigidBody, NgtrCuboidCollider, FloorComponent, RoofComponent],
 })
 export class Dungeon {
   private player = viewChild<NgtrRigidBody>('player');
 
   textures = injectTexture(() => ({
     walls: './textures/wall.png',
-    roof: './textures/roof.png',
   }));
   wallsMap = computed(() => this.textures()?.walls || null);
-  roofMap = computed(() => this.textures()?.roof || null);
 
   protected size = 30;
   protected layout = generateDungeonLayout(this.size, this.size);
@@ -124,7 +114,6 @@ export class Dungeon {
     // nearest neighbor + repeat tiling for walls and roof textures
     effect(() => {
       const walls = this.wallsMap();
-      const roof = this.roofMap();
       if (walls) {
         walls.magFilter = NearestFilter;
         walls.minFilter = NearestFilter;
@@ -133,15 +122,6 @@ export class Dungeon {
         walls.wrapT = RepeatWrapping;
         walls.repeat.set(1, 1);
         walls.needsUpdate = true;
-      }
-      if (roof) {
-        roof.magFilter = NearestFilter;
-        roof.minFilter = NearestFilter;
-        roof.generateMipmaps = false;
-        roof.wrapS = RepeatWrapping;
-        roof.wrapT = RepeatWrapping;
-        roof.repeat.set(10, 10);
-        roof.needsUpdate = true;
       }
     });
 
