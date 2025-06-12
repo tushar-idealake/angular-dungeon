@@ -20,9 +20,9 @@
     "@dimforge/rapier3d-compat": "^0.14.0",
     "@monogrid/gainmap-js": "^3.1.0",
     "@pmndrs/vanilla": "^1.20.2",
-    "angular-three": "^3.4.0",
-    "angular-three-rapier": "^3.7.2",
-    "angular-three-soba": "^3.4.0",
+    "angular-three": "4.0.0-next.107",
+    "angular-three-rapier": "4.0.0-next.107",
+    "angular-three-soba": "4.0.0-next.107",
     "camera-controls": "^2.9.0",
     "maath": "^0.10.8",
     "ngxtension": "^4.2.0",
@@ -57,5 +57,6 @@
       "prettier-plugin-organize-imports",
       "prettier-plugin-tailwindcss"
     ]
-  }
+  },
+  "packageManager": "pnpm@10.11.1"
 }

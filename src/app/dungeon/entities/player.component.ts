@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, input, viewChild } from '@angular/core';
-import { extend, injectBeforeRender } from 'angular-three';
+import { beforeRender, extend } from 'angular-three';
 import { NgtrCuboidCollider, NgtrRigidBody } from 'angular-three-rapier';
 import { Object3D, Vector3 } from 'three';
 
@@ -8,14 +8,11 @@ import { Object3D, Vector3 } from 'three';
   template: `
     <ngt-object3D
       #player
-      ngtrRigidBody
+      rigidBody
       [position]="[-(layout().length / 2), 0.5, 0.5]"
-      [options]="{
-        mass: 1,
-        enabledRotations: [false, false, false],
-      }"
+      [options]="{ mass: 1, enabledRotations: [false, false, false] }"
     >
-      <ngt-object3D ngtrCuboidCollider [args]="[0.2, 0.2, 0.2]" />
+      <ngt-object3D [cuboidCollider]="[0.2, 0.2, 0.2]" />
     </ngt-object3D>
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -26,15 +23,13 @@ export class PlayerComponent {
   layout = input.required<string[][]>();
   wasd = input.required<Set<string>>();
 
-  player = viewChild<NgtrRigidBody>('player');
+  player = viewChild.required<NgtrRigidBody>('player');
 
   constructor() {
-    extend({
-      Object3D,
-    });
+    extend({ Object3D });
 
-    injectBeforeRender(({ delta, camera }) => {
-      const body = this.player()?.rigidBody();
+    beforeRender(({ delta, camera }) => {
+      const body = this.player().rigidBody();
       if (!body) return;
 
       // sync camera position with physics body

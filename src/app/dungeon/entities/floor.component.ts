@@ -1,34 +1,28 @@
 import { ChangeDetectionStrategy, Component, computed, CUSTOM_ELEMENTS_SCHEMA, effect, input } from '@angular/core';
-import { extend } from 'angular-three';
+import { extend, NgtArgs } from 'angular-three';
 import { NgtrCuboidCollider } from 'angular-three-rapier';
-import { injectTexture } from 'angular-three-soba/loaders';
+import { textureResource } from 'angular-three-soba/loaders';
 import { Mesh, MeshBasicMaterial, NearestFilter, Object3D, PlaneGeometry, RepeatWrapping } from 'three';
 
 @Component({
   selector: 'dungeon-floor',
   template: `
-    <ngt-mesh
-      [position]="[0, 0, 0]"
-      [rotation]="[-Math.PI / 2, 0, 0]"
-      [scale]="[layout()[0].length, layout().length, 1]"
-    >
-      <ngt-plane-geometry [args]="[1, 1]" />
+    <ngt-mesh [rotation.x]="-Math.PI / 2" [scale]="[layout()[0].length, layout().length, 1]">
+      <ngt-plane-geometry *args="[1, 1]" />
       <ngt-mesh-basic-material [map]="floorMap()" />
     </ngt-mesh>
-    <ngt-object3D ngtrCuboidCollider [args]="[layout()[0].length, 0.1, layout().length]" />
+    <ngt-object3D [cuboidCollider]="[layout()[0].length, 0.1, layout().length]" />
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
-  imports: [NgtrCuboidCollider],
+  imports: [NgtrCuboidCollider, NgtArgs],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FloorComponent {
   layout = input.required<string[][]>();
 
-  textures = injectTexture(() => ({
-    floor: './textures/floor.png',
-  }));
+  textures = textureResource(() => ({ floor: './textures/floor.png' }));
 
-  floorMap = computed(() => this.textures()?.floor || null);
+  floorMap = computed(() => this.textures.value()?.floor || null);
 
   Math = Math;
 

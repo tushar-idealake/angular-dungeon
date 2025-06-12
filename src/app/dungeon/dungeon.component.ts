@@ -1,6 +1,6 @@
-import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, effect } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { extend, injectBeforeRender, injectStore } from 'angular-three';
+import { extend, injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
 import { filter, fromEvent, merge, scan, withLatestFrom } from 'rxjs';
 import { Euler } from 'three';
@@ -11,6 +11,7 @@ import { WallComponent } from './entities/wall.component';
 import { generateDungeonLayout } from './utils/generate-dungeon';
 
 @Component({
+  selector: 'dungeon-scene',
   template: `
     <ngtr-physics [options]="{ gravity: [0, -9.81, 0], colliders: false }">
       <ng-template>
@@ -28,7 +29,6 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
       </ng-template>
     </ngtr-physics>
   `,
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgtrPhysics, FloorComponent, RoofComponent, PlayerComponent, WallComponent],
 })
@@ -36,13 +36,10 @@ export class Dungeon {
   layout = generateDungeonLayout(30, 30);
 
   store = injectStore();
-  camera = this.store.select('camera');
-  gl = this.store.select('gl');
-  scene = this.store.select('scene');
-  camera$ = toObservable(this.camera);
-  gl$ = toObservable(this.gl);
 
-  Math = Math;
+  camera$ = toObservable(this.store.camera);
+  gl$ = toObservable(this.store.gl);
+
   keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
   keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');
   wasd$ = merge(this.keydown$, this.keyup$).pipe(
@@ -60,7 +57,7 @@ export class Dungeon {
 
     // pointer lock
     effect(() => {
-      const renderer = this.gl();
+      const renderer = this.store.gl();
       if (!renderer) return;
 
       const onClick = () => {
@@ -89,7 +86,5 @@ export class Dungeon {
         euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
         camera.quaternion.setFromEuler(euler);
       });
-
-    injectBeforeRender(({ delta, camera }) => {});
   }
 }
