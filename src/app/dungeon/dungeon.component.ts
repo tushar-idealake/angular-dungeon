@@ -1,22 +1,9 @@
-import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, effect } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, effect } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectBeforeRender, injectStore } from 'angular-three';
-import { NgtrCuboidCollider, NgtrPhysics } from 'angular-three-rapier';
-import { injectTexture } from 'angular-three-soba/loaders';
+import { NgtrPhysics } from 'angular-three-rapier';
 import { filter, fromEvent, merge, scan, withLatestFrom } from 'rxjs';
-import {
-  BoxGeometry,
-  BufferAttribute,
-  BufferGeometry,
-  Euler,
-  GridHelper,
-  LineBasicMaterial,
-  LineSegments,
-  Mesh,
-  MeshBasicMaterial,
-  Object3D,
-  PlaneGeometry,
-} from 'three';
+import { Euler } from 'three';
 import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
 import { RoofComponent } from './entities/roof.component';
@@ -25,7 +12,7 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
 
 @Component({
   template: `
-    <ngtr-physics [options]="{ gravity: [0, -9.81, 0], debug: true, colliders: false }">
+    <ngtr-physics [options]="{ gravity: [0, -9.81, 0], colliders: false }">
       <ng-template>
         <dungeon-floor [layout]="layout" />
         <dungeon-roof [layout]="layout" />
@@ -43,16 +30,10 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgtrPhysics, NgtrCuboidCollider, FloorComponent, RoofComponent, PlayerComponent, WallComponent],
+  imports: [NgtrPhysics, FloorComponent, RoofComponent, PlayerComponent, WallComponent],
 })
 export class Dungeon {
-  textures = injectTexture(() => ({
-    walls: './textures/wall.png',
-  }));
-  wallsMap = computed(() => this.textures()?.walls || null);
-
-  size = 30;
-  layout = generateDungeonLayout(this.size, this.size);
+  layout = generateDungeonLayout(30, 30);
 
   store = injectStore();
   camera = this.store.select('camera');
@@ -75,18 +56,7 @@ export class Dungeon {
   wasd = toSignal(this.wasd$, { initialValue: new Set<string>() });
 
   constructor() {
-    extend({
-      Mesh,
-      BoxGeometry,
-      PlaneGeometry,
-      MeshBasicMaterial,
-      GridHelper,
-      Object3D,
-      LineSegments,
-      LineBasicMaterial,
-      BufferGeometry,
-      BufferAttribute,
-    });
+    extend({});
 
     // pointer lock
     effect(() => {
