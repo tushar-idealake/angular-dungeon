@@ -1,7 +1,7 @@
-import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, effect, viewChild } from '@angular/core';
+import { CUSTOM_ELEMENTS_SCHEMA, ChangeDetectionStrategy, Component, computed, effect } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectBeforeRender, injectStore } from 'angular-three';
-import { NgtrCuboidCollider, NgtrPhysics, NgtrRigidBody } from 'angular-three-rapier';
+import { NgtrCuboidCollider, NgtrPhysics } from 'angular-three-rapier';
 import { injectTexture } from 'angular-three-soba/loaders';
 import { filter, fromEvent, merge, scan, withLatestFrom } from 'rxjs';
 import {
@@ -18,9 +18,9 @@ import {
   Object3D,
   PlaneGeometry,
   RepeatWrapping,
-  Vector3,
 } from 'three';
 import { FloorComponent } from './entities/floor.component';
+import { PlayerComponent } from './entities/player.component';
 import { RoofComponent } from './entities/roof.component';
 import { generateDungeonLayout } from './utils/generate-dungeon';
 
@@ -30,19 +30,7 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
       <ng-template>
         <dungeon-floor [layout]="layout" />
         <dungeon-roof [layout]="layout" />
-
-        <!-- camera/player -->
-        <ngt-object3D
-          #player
-          ngtrRigidBody
-          [position]="[-(size / 2 + 3), 0.5, 0]"
-          [options]="{
-            mass: 1,
-            enabledRotations: [false, false, false],
-          }"
-        >
-          <ngt-object3D ngtrCuboidCollider [args]="[0.2, 0.2, 0.2]" />
-        </ngt-object3D>
+        <dungeon-player [layout]="layout" [wasd]="wasd()" />
 
         <!-- walls (static colliders for player collision) -->
         @for (row of layout; track $index; let y = $index) {
@@ -64,30 +52,28 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgtrPhysics, NgtrRigidBody, NgtrCuboidCollider, FloorComponent, RoofComponent],
+  imports: [NgtrPhysics, NgtrCuboidCollider, FloorComponent, RoofComponent, PlayerComponent],
 })
 export class Dungeon {
-  private player = viewChild<NgtrRigidBody>('player');
-
   textures = injectTexture(() => ({
     walls: './textures/wall.png',
   }));
   wallsMap = computed(() => this.textures()?.walls || null);
 
-  protected size = 30;
-  protected layout = generateDungeonLayout(this.size, this.size);
+  size = 30;
+  layout = generateDungeonLayout(this.size, this.size);
 
-  private store = injectStore();
-  private camera = this.store.select('camera');
-  private gl = this.store.select('gl');
-  private scene = this.store.select('scene');
-  private camera$ = toObservable(this.camera);
-  private gl$ = toObservable(this.gl);
+  store = injectStore();
+  camera = this.store.select('camera');
+  gl = this.store.select('gl');
+  scene = this.store.select('scene');
+  camera$ = toObservable(this.camera);
+  gl$ = toObservable(this.gl);
 
-  protected Math = Math;
-  private keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
-  private keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');
-  private wasd$ = merge(this.keydown$, this.keyup$).pipe(
+  Math = Math;
+  keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
+  keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');
+  wasd$ = merge(this.keydown$, this.keyup$).pipe(
     filter((e) => ['w', 'a', 's', 'd'].includes(e.key.toLowerCase())),
     scan((acc, curr) => {
       if (curr.type === 'keyup') acc.delete(curr.key.toLowerCase());
@@ -95,7 +81,7 @@ export class Dungeon {
       return acc;
     }, new Set<string>()),
   );
-  private wasd = toSignal(this.wasd$, { initialValue: new Set<string>() });
+  wasd = toSignal(this.wasd$, { initialValue: new Set<string>() });
 
   constructor() {
     extend({
@@ -157,31 +143,6 @@ export class Dungeon {
         camera.quaternion.setFromEuler(euler);
       });
 
-    injectBeforeRender(({ delta, camera }) => {
-      const body = this.player()?.rigidBody();
-      if (!body) return;
-
-      // sync camera position with physics body
-      const pos = body.translation();
-      camera.position.set(pos.x, pos.y, pos.z);
-
-      // movement input relative to camera orientation
-      const dir = new Vector3();
-      const wasd = this.wasd();
-      if (wasd.has('w')) dir.z -= 1;
-      if (wasd.has('s')) dir.z += 1;
-      if (wasd.has('a')) dir.x -= 1;
-      if (wasd.has('d')) dir.x += 1;
-
-      if (dir.lengthSq()) {
-        dir
-          .normalize()
-          .multiplyScalar(100 * delta)
-          .applyQuaternion(camera.quaternion);
-        body.setLinvel({ x: dir.x, y: 0, z: dir.z }, true);
-      } else {
-        body.setLinvel({ x: 0, y: 0, z: 0 }, true);
-      }
-    });
+    injectBeforeRender(({ delta, camera }) => {});
   }
 }

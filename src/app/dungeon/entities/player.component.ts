@@ -1,0 +1,63 @@
+import { ChangeDetectionStrategy, Component, CUSTOM_ELEMENTS_SCHEMA, input, viewChild } from '@angular/core';
+import { extend, injectBeforeRender } from 'angular-three';
+import { NgtrCuboidCollider, NgtrRigidBody } from 'angular-three-rapier';
+import { Object3D, Vector3 } from 'three';
+
+@Component({
+  selector: 'dungeon-player',
+  template: `
+    <ngt-object3D
+      #player
+      ngtrRigidBody
+      [position]="[-(layout().length / 2 + 3), 0.5, 0]"
+      [options]="{
+        mass: 1,
+        enabledRotations: [false, false, false],
+      }"
+    >
+      <ngt-object3D ngtrCuboidCollider [args]="[0.2, 0.2, 0.2]" />
+    </ngt-object3D>
+  `,
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [NgtrCuboidCollider, NgtrRigidBody],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class PlayerComponent {
+  layout = input.required<string[][]>();
+  wasd = input.required<Set<string>>();
+
+  player = viewChild<NgtrRigidBody>('player');
+
+  constructor() {
+    extend({
+      Object3D,
+    });
+
+    injectBeforeRender(({ delta, camera }) => {
+      const body = this.player()?.rigidBody();
+      if (!body) return;
+
+      // sync camera position with physics body
+      const pos = body.translation();
+      camera.position.set(pos.x, pos.y, pos.z);
+
+      // movement input relative to camera orientation
+      const dir = new Vector3();
+      const wasd = this.wasd();
+      if (wasd.has('w')) dir.z -= 1;
+      if (wasd.has('s')) dir.z += 1;
+      if (wasd.has('a')) dir.x -= 1;
+      if (wasd.has('d')) dir.x += 1;
+
+      if (dir.lengthSq()) {
+        dir
+          .normalize()
+          .multiplyScalar(100 * delta)
+          .applyQuaternion(camera.quaternion);
+        body.setLinvel({ x: dir.x, y: 0, z: dir.z }, true);
+      } else {
+        body.setLinvel({ x: 0, y: 0, z: 0 }, true);
+      }
+    });
+  }
+}
