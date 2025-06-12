@@ -34,7 +34,7 @@ import {
           <ngt-plane-geometry [args]="[1, 1]" />
           <ngt-mesh-basic-material [map]="floorMap()" />
         </ngt-mesh>
-        <ngt-object3D ngtrCuboidCollider [args]="[10, 0.1, 10]" />
+        <ngt-object3D ngtrCuboidCollider [args]="[layout[0].length, 0.1, layout.length]" />
 
         <!-- roof -->
         <ngt-mesh
@@ -50,7 +50,7 @@ import {
         <ngt-object3D
           #player
           ngtrRigidBody
-          [position]="[2, 0.5, 6]"
+          [position]="[-(size / 2 + 3), 0.5, 0]"
           [options]="{
             mass: 1,
             enabledRotations: [false, false, false],
@@ -93,14 +93,17 @@ export class Dungeon {
   roofMap = computed(() => this.textures()?.roof || null);
   floorMap = computed(() => this.textures()?.floor || null);
 
-  protected layout = [
-    ['1', '1', '1', '1', '1'],
-    ['1', '0', '0', '1', '1'],
-    ['1', '0', '0', '0', '1'],
-    ['1', '0', '1', '0', '1'],
-    ['1', '0', '0', '1', '1'],
-    ['1', '1', '0', '1', '1'],
-  ];
+  protected size = 30;
+  protected layout = generateDungeonLayout(this.size, this.size);
+
+  // protected layout = [
+  //   ['1', '1', '1', '1', '1'],
+  //   ['1', '0', '0', '1', '1'],
+  //   ['1', '0', '0', '0', '1'],
+  //   ['1', '0', '1', '0', '1'],
+  //   ['1', '0', '0', '1', '1'],
+  //   ['1', '1', '0', '1', '1'],
+  // ];
 
   private store = injectStore();
   private camera = this.store.select('camera');
@@ -229,4 +232,62 @@ export class Dungeon {
       }
     });
   }
+}
+
+function generateDungeonLayout(w: number, h: number): string[][] {
+  // initialize all walls
+  const grid = Array.from({ length: h }, () => Array(w).fill('1'));
+
+  // pick entrance on west wall, carve it open
+  const entranceY = Math.floor(h / 2);
+  grid[entranceY][0] = '0';
+
+  // carve winding corridors by a simple randomized DFS on a coarse 2-cell grid
+  const visited = new Set<string>();
+  function carve(cx: number, cy: number) {
+    // make sure this cell is open
+    grid[cy][cx] = '0';
+    visited.add(`${cx},${cy}`);
+
+    const dirs = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ].sort(() => Math.random() - 0.5);
+    for (let [dx, dy] of dirs) {
+      const nx = cx + dx * 2,
+        ny = cy + dy * 2;
+      if (ny > 0 && ny < h - 1 && nx > 0 && nx < w - 1 && !visited.has(`${nx},${ny}`)) {
+        // knock down wall between
+        grid[cy + dy][cx + dx] = '0';
+        grid[ny][nx] = '0';
+        carve(nx, ny);
+      }
+    }
+  }
+  // start DFS just inside the entrance
+  carve(1, entranceY);
+
+  // carve a few random rooms
+  for (let i = 0; i < 5; i++) {
+    const rw = 4 + Math.floor(Math.random() * 4);
+    const rh = 4 + Math.floor(Math.random() * 4);
+    const rx = 2 + Math.floor(Math.random() * (w - rw - 4));
+    const ry = 2 + Math.floor(Math.random() * (h - rh - 4));
+    // carve room
+    for (let y = ry; y < ry + rh; y++) {
+      for (let x = rx; x < rx + rw; x++) {
+        grid[y][x] = '0';
+      }
+    }
+    // maybe add pillars
+    if (Math.random() < 0.5) {
+      const px = rx + 1 + Math.floor(Math.random() * (rw - 2));
+      const py = ry + 1 + Math.floor(Math.random() * (rh - 2));
+      grid[py][px] = '1';
+    }
+  }
+
+  return grid;
 }
