@@ -9,7 +9,7 @@ import { Object3D, Vector3 } from 'three';
     <ngt-object3D
       #player
       ngtrRigidBody
-      [position]="[-(layout().length / 2 + 3), 0.5, 0]"
+      [position]="[-(layout().length / 2), 0.5, 0.5]"
       [options]="{
         mass: 1,
         enabledRotations: [false, false, false],
