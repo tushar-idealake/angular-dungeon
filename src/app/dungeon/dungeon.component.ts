@@ -14,14 +14,13 @@ import {
   LineSegments,
   Mesh,
   MeshBasicMaterial,
-  NearestFilter,
   Object3D,
   PlaneGeometry,
-  RepeatWrapping,
 } from 'three';
 import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
 import { RoofComponent } from './entities/roof.component';
+import { WallComponent } from './entities/wall.component';
 import { generateDungeonLayout } from './utils/generate-dungeon';
 
 @Component({
@@ -32,18 +31,10 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
         <dungeon-roof [layout]="layout" />
         <dungeon-player [layout]="layout" [wasd]="wasd()" />
 
-        <!-- walls (static colliders for player collision) -->
         @for (row of layout; track $index; let y = $index) {
           @for (wall of row; track $index; let x = $index) {
             @if (wall === '1') {
-              <ngt-mesh
-                ngtrRigidBody="fixed"
-                [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]"
-              >
-                <ngt-box-geometry />
-                <ngt-mesh-basic-material [map]="wallsMap()" />
-                <ngt-object3D ngtrCuboidCollider [args]="[0.5, 0.5, 0.5]" />
-              </ngt-mesh>
+              <dungeon-wall [position]="[x - (layout[0].length - 1) / 2, 0.5, y - (layout.length - 1) / 2]" />
             }
           }
         }
@@ -52,7 +43,7 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
   `,
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgtrPhysics, NgtrCuboidCollider, FloorComponent, RoofComponent, PlayerComponent],
+  imports: [NgtrPhysics, NgtrCuboidCollider, FloorComponent, RoofComponent, PlayerComponent, WallComponent],
 })
 export class Dungeon {
   textures = injectTexture(() => ({
@@ -95,20 +86,6 @@ export class Dungeon {
       LineBasicMaterial,
       BufferGeometry,
       BufferAttribute,
-    });
-
-    // nearest neighbor + repeat tiling for walls and roof textures
-    effect(() => {
-      const walls = this.wallsMap();
-      if (walls) {
-        walls.magFilter = NearestFilter;
-        walls.minFilter = NearestFilter;
-        walls.generateMipmaps = false;
-        walls.wrapS = RepeatWrapping;
-        walls.wrapT = RepeatWrapping;
-        walls.repeat.set(1, 1);
-        walls.needsUpdate = true;
-      }
     });
 
     // pointer lock
