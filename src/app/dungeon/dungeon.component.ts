@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, effect } from '@angular/core';
-import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
-import { filter, fromEvent, merge, scan, withLatestFrom } from 'rxjs';
+import { filter, fromEvent, merge, scan } from 'rxjs';
 import { Euler } from 'three';
 import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
@@ -34,11 +34,7 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
 })
 export class Dungeon {
   layout = generateDungeonLayout(30, 30);
-
   store = injectStore();
-
-  camera$ = toObservable(this.store.camera);
-  gl$ = toObservable(this.store.gl);
 
   keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
   keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');
@@ -72,12 +68,12 @@ export class Dungeon {
 
     // mouse look
     fromEvent<PointerEvent>(document, 'pointermove')
-      .pipe(
-        withLatestFrom(this.gl$, this.camera$),
-        filter(([_, renderer]) => document.pointerLockElement === renderer.domElement),
-        takeUntilDestroyed(),
-      )
-      .subscribe(([event, _, camera]) => {
+      .pipe(takeUntilDestroyed())
+      .subscribe((event) => {
+        const camera = this.store.camera();
+        const renderer = this.store.gl();
+        if (!camera || !renderer || document.pointerLockElement !== renderer.domElement) return;
+
         const euler = new Euler(0, 0, 0, 'YXZ');
         euler.setFromQuaternion(camera.quaternion);
         euler.y -= event.movementX * 0.002;
