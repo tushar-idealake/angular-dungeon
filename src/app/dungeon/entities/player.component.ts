@@ -9,7 +9,7 @@ import { Object3D, Vector3 } from 'three';
     <ngt-object3D
       #player
       rigidBody
-      [position]="[-(layout().length / 2), 0.5, 0.5]"
+      [position]="[-(layout().length / 2) - 1, 0.5, 0.5]"
       [options]="{ mass: 1, enabledRotations: [false, false, false] }"
     >
       <ngt-object3D [cuboidCollider]="[0.2, 0.2, 0.2]" />

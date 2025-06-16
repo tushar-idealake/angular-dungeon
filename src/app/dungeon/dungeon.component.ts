@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, effect } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
-import { filter, fromEvent, merge, scan } from 'rxjs';
+import { filter, fromEvent, merge, scan, startWith } from 'rxjs';
 import { Euler } from 'three';
 import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
@@ -68,17 +68,23 @@ export class Dungeon {
 
     // mouse look
     fromEvent<PointerEvent>(document, 'pointermove')
-      .pipe(takeUntilDestroyed())
+      .pipe(startWith(null), takeUntilDestroyed())
       .subscribe((event) => {
         const camera = this.store.camera();
         const renderer = this.store.gl();
+        const PI_2 = Math.PI / 2;
+        if (event === null) {
+          const euler = new Euler(0, -PI_2, 0, 'YXZ');
+          camera.quaternion.setFromEuler(euler);
+          return;
+        }
+
         if (!camera || !renderer || document.pointerLockElement !== renderer.domElement) return;
 
         const euler = new Euler(0, 0, 0, 'YXZ');
         euler.setFromQuaternion(camera.quaternion);
         euler.y -= event.movementX * 0.002;
         euler.x -= event.movementY * 0.002;
-        const PI_2 = Math.PI / 2;
         euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
         camera.quaternion.setFromEuler(euler);
       });

@@ -10,6 +10,6 @@ import { Dungeon } from './dungeon/dungeon.component';
     </ngt-canvas>
   `,
   host: { class: 'block h-dvh w-full' },
-  imports: [NgtCanvas, Dungeon, NgtCanvas],
+  imports: [NgtCanvas, Dungeon],
 })
 export class AppComponent {}
