@@ -1,9 +1,9 @@
-import { ChangeDetectionStrategy, Component, effect } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { extend, injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
+import { NgtsPointerLockControls } from 'angular-three-soba/controls';
 import { filter, fromEvent, merge, scan } from 'rxjs';
-import { Euler } from 'three';
 import { FloorComponent } from './entities/floor.component';
 import { PlayerComponent } from './entities/player.component';
 import { RoofComponent } from './entities/roof.component';
@@ -28,9 +28,11 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
         }
       </ng-template>
     </ngtr-physics>
+
+    <ngts-pointer-lock-controls />
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgtrPhysics, FloorComponent, RoofComponent, PlayerComponent, WallComponent],
+  imports: [NgtrPhysics, FloorComponent, RoofComponent, PlayerComponent, WallComponent, NgtsPointerLockControls],
 })
 export class Dungeon {
   layout = generateDungeonLayout(30, 30);
@@ -51,36 +53,36 @@ export class Dungeon {
   constructor() {
     extend({});
 
-    // pointer lock
-    effect(() => {
-      const renderer = this.store.gl();
-      if (!renderer) return;
-
-      const onClick = () => {
-        renderer.domElement.requestPointerLock();
-      };
-      renderer.domElement.addEventListener('click', onClick);
-
-      return () => {
-        renderer.domElement.removeEventListener('click', onClick);
-      };
-    });
-
-    // mouse look
-    fromEvent<PointerEvent>(document, 'pointermove')
-      .pipe(takeUntilDestroyed())
-      .subscribe((event) => {
-        const camera = this.store.camera();
-        const renderer = this.store.gl();
-        if (!camera || !renderer || document.pointerLockElement !== renderer.domElement) return;
-
-        const euler = new Euler(0, 0, 0, 'YXZ');
-        euler.setFromQuaternion(camera.quaternion);
-        euler.y -= event.movementX * 0.002;
-        euler.x -= event.movementY * 0.002;
-        const PI_2 = Math.PI / 2;
-        euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
-        camera.quaternion.setFromEuler(euler);
-      });
+    // // pointer lock
+    // effect(() => {
+    //   const renderer = this.store.gl();
+    //   if (!renderer) return;
+    //
+    //   const onClick = () => {
+    //     renderer.domElement.requestPointerLock();
+    //   };
+    //   renderer.domElement.addEventListener('click', onClick);
+    //
+    //   return () => {
+    //     renderer.domElement.removeEventListener('click', onClick);
+    //   };
+    // });
+    //
+    // // mouse look
+    // fromEvent<PointerEvent>(document, 'pointermove')
+    //   .pipe(takeUntilDestroyed())
+    //   .subscribe((event) => {
+    //     const camera = this.store.camera();
+    //     const renderer = this.store.gl();
+    //     if (!camera || !renderer || document.pointerLockElement !== renderer.domElement) return;
+    //
+    //     const euler = new Euler(0, 0, 0, 'YXZ');
+    //     euler.setFromQuaternion(camera.quaternion);
+    //     euler.y -= event.movementX * 0.002;
+    //     euler.x -= event.movementY * 0.002;
+    //     const PI_2 = Math.PI / 2;
+    //     euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
+    //     camera.quaternion.setFromEuler(euler);
+    //   });
   }
 }
