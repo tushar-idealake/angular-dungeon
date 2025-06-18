@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { extend, injectStore } from 'angular-three';
 import { NgtrPhysics } from 'angular-three-rapier';
 import { NgtsPointerLockControls } from 'angular-three-soba/controls';
 import { filter, fromEvent, merge, scan } from 'rxjs';
@@ -36,7 +35,6 @@ import { generateDungeonLayout } from './utils/generate-dungeon';
 })
 export class Dungeon {
   layout = generateDungeonLayout(30, 30);
-  store = injectStore();
 
   keydown$ = fromEvent<KeyboardEvent>(document, 'keydown');
   keyup$ = fromEvent<KeyboardEvent>(document, 'keyup');
@@ -49,40 +47,4 @@ export class Dungeon {
     }, new Set<string>()),
   );
   wasd = toSignal(this.wasd$, { initialValue: new Set<string>() });
-
-  constructor() {
-    extend({});
-
-    // // pointer lock
-    // effect(() => {
-    //   const renderer = this.store.gl();
-    //   if (!renderer) return;
-    //
-    //   const onClick = () => {
-    //     renderer.domElement.requestPointerLock();
-    //   };
-    //   renderer.domElement.addEventListener('click', onClick);
-    //
-    //   return () => {
-    //     renderer.domElement.removeEventListener('click', onClick);
-    //   };
-    // });
-    //
-    // // mouse look
-    // fromEvent<PointerEvent>(document, 'pointermove')
-    //   .pipe(takeUntilDestroyed())
-    //   .subscribe((event) => {
-    //     const camera = this.store.camera();
-    //     const renderer = this.store.gl();
-    //     if (!camera || !renderer || document.pointerLockElement !== renderer.domElement) return;
-    //
-    //     const euler = new Euler(0, 0, 0, 'YXZ');
-    //     euler.setFromQuaternion(camera.quaternion);
-    //     euler.y -= event.movementX * 0.002;
-    //     euler.x -= event.movementY * 0.002;
-    //     const PI_2 = Math.PI / 2;
-    //     euler.x = Math.max(-PI_2, Math.min(PI_2, euler.x));
-    //     camera.quaternion.setFromEuler(euler);
-    //   });
-  }
 }
